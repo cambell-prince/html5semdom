@@ -1,0 +1,14 @@
+#wordform_description {
+    font-weight: bold;
+    font-size: .9em;
+}
+
+label {
+    font-weight: bold;
+}
+
+
+
+/* TODO: make a custom RED X icon for delete list item.  See
+http://stackoverflow.com/questions/9041311/using-custom-icons-in-jquery-mobile-list
+*/

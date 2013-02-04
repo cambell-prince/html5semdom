@@ -1,0 +1,101 @@
+<!DOCTYPE html> 
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<title>Mobile Semantic Domain Gather Words</title> 
+	<link rel="stylesheet" href="lib/jquery.mobile-1.2.0.min.css" />
+    <link rel="stylesheet" href="semdomgatherwords.css" />
+	<script src="lib/jquery-1.8.2.min.js"></script>
+	<script src="lib/jquery.mobile-1.2.0.min.js"></script>
+    <script src="lib/modernizr-1.7.min.js"></script>
+    <script src="semdomapp.js"></script>
+</head> 
+
+	
+<body>
+
+<!-- Start of add word page: #addword -->
+<div data-role="page" id="addeditword">
+        <input type="hidden" id="wordform_itemid" name="itemid" value="" />
+
+	<div data-role="header">
+        <select name="semdom" id="wordform_semdomselect">
+            <option value=''>Loading Semantic Domains...Please Wait</option>
+        </select>
+	</div><!-- /header -->
+
+	<div data-role="content" >
+
+        <div id="wordform_slider_container">
+            <input type="range" name="wordform_slider" id="wordform_slider" value="0" min="0" max="10" data-highlight="true" />
+        </div>
+
+        <!-- Semantic Domain text description -->
+        <p id="wordform_description">Think of words that...</p>
+
+        <!-- Word multitext -->
+        <label for="wordform_word">Word</label>
+        <input type="text" name="word" id="wordform_word" value=""  />
+        
+
+        <!-- Meaning multitext -->
+        <label for="wordform_meaning">Meaning</label>
+        <input type="text" name="meaning" id="wordform_meaning" value=""  />
+     </div>
+
+
+
+	<div data-role="footer" data-theme="d">
+        <!-- Add Word Button and Done Button -->
+
+		<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><button id="wordform_addbutton" data-theme="b">Add Word</button></div>
+				<div class="ui-block-b"><button id="wordform_donebutton" data-theme="c">Done</button></div>
+	    </fieldset>
+	</div><!-- /footer -->
+</div><!-- / close add word page -->
+
+
+
+
+
+
+
+
+
+<!-- Start of second page: #two -->
+<div data-role="page" id="listwords">
+
+	<div data-role="header">
+        <fieldset class="ui-grid-a">
+            <div class="ui-block-a">
+                <select name="semdom" id="listwords_semdomselect">
+                <option value=''>Loading Semantic Domains...Please Wait</option>
+            </select>
+            </div>
+            <div class="ui-block-b"><button id="listwords_gatherbutton" data-theme="b">Gather Words</button></div>
+        </fieldset>
+	</div><!-- /header -->
+
+	<div data-role="content">
+        <div class="ui-bar ui-bar-c" style="margin-bottom: 20px">
+        <span id="listwords_wordcount">0 Words in List</span>
+        <button id="listwords_editbutton" data-mini="true" data-inline="true"  data-theme="b">Edit</button>
+        <button id="listwords_syncbutton" data-mini="true" data-theme="b" data-icon="gear" class="ui-btn-right">Upload</button>
+        </div>
+        <ul id="listwords_list" data-role="listview" data-filter="true">
+        </ul>
+
+	</div><!-- /content -->
+
+    <div id="output"></div>
+	<div data-role="footer">
+
+	</div><!-- /footer -->
+</div><!-- /page two -->
+
+</body>
+</html>
+
