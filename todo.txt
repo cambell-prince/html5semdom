@@ -4,3 +4,6 @@ to fix:
 - add summary box animation
 
 - make deleting a word more clear (swipe action?)
+
+- iOS sometimes slider is not hiding number on slider; also focus is not being set;
+
