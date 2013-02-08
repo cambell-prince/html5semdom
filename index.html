@@ -8,6 +8,7 @@
 	<link rel="stylesheet" href="lib/jquery.mobile-1.2.0.min.css" />
     <link rel="stylesheet" href="semdomgatherwords.css" />
 	<script src="lib/jquery-1.8.2.min.js"></script>
+	<script type="text/javascript" src="lib/jquery.tinysort.min.js"></script>
 	<script src="lib/jquery.mobile-1.2.0.min.js"></script>
     <script src="lib/modernizr-1.7.min.js"></script>
     <script src="semdomapp.js"></script>
@@ -16,11 +17,38 @@
 	
 <body>
 
+<div data-role="page" id="apploading">
+	<h4>Loading...</h4>
+	<h3>Gather Words App</h3>
+</div>
+
+<div data-role="dialog" id="jserror">
+	<div data-role="header" data-theme="d">
+		<h1>Oops!</h1>
+	</div>
+	<div data-role="content">
+		<h4 id="jserror_msg"></h4>
+		<span id="jserror_url"></span>
+		<span id="jserror_line"></span>
+		<a href="mailto:semdomapp@palaso.org" data-role="button" id="jserror_emaildev" data-theme="b">Email Error to Developers</a>
+	</div>
+</div>
+
+<div data-role="dialog" id="lfupload">
+	<div data-role="header" data-theme="d">
+		<h1>Upload to LanguageForge</h1>
+	</div>
+	<div data-role="content">
+		This feature is not implemented yet :(
+	</div>
+</div>
+
+
 <!-- Start of add word page: #addword -->
 <div data-role="page" id="addeditword">
         <input type="hidden" id="wordform_itemid" name="itemid" value="" />
 
-	<div data-role="header">
+	<div data-role="header" data-position="fixed">
         <select name="semdom" id="wordform_semdomselect">
             <option value=''>Loading Semantic Domains...Please Wait</option>
         </select>
@@ -35,19 +63,22 @@
         <!-- Semantic Domain text description -->
         <p id="wordform_description">Think of words that...</p>
 
+        <div id="wordform_wordcontainer">
         <!-- Word multitext -->
-        <label for="wordform_word">Word</label>
+        <label for="wordform_word">Word <span class="writingsystemlabel"></span></label>
         <input type="text" name="word" id="wordform_word" value=""  />
-        
+        </div>
 
         <!-- Meaning multitext -->
-        <label for="wordform_meaning">Meaning</label>
+        <div id="wordform_meaningcontainer">
+        <label id="wordform_meaninglabel" for="wordform_meaning">Meaning <span class="writingsystemlabel"></span></label>
         <input type="text" name="meaning" id="wordform_meaning" value=""  />
+        </div>
      </div>
 
 
 
-	<div data-role="footer" data-theme="d">
+	<div data-role="footer" data-theme="d" data-position="fixed">
         <!-- Add Word Button and Done Button -->
 
 		<fieldset class="ui-grid-a">
@@ -68,7 +99,7 @@
 <!-- Start of second page: #two -->
 <div data-role="page" id="listwords">
 
-	<div data-role="header">
+	<div data-role="header" data-position="fixed">
         <fieldset class="ui-grid-a">
             <div class="ui-block-a">
                 <select name="semdom" id="listwords_semdomselect">
@@ -81,9 +112,9 @@
 
 	<div data-role="content">
         <div class="ui-bar ui-bar-c" style="margin-bottom: 20px">
-        <span id="listwords_wordcount">0 Words in List</span>
-        <button id="listwords_editbutton" data-mini="true" data-inline="true"  data-theme="b">Edit</button>
-        <button id="listwords_syncbutton" data-mini="true" data-theme="b" data-icon="gear" class="ui-btn-right">Upload</button>
+        <button id="listwords_prefsbutton" data-mini="true" data-theme="b" data-icon="gear" class="ui-btn-right">Settings</button>
+        <button id="listwords_editbutton" data-mini="true" data-inline="true"  data-theme="b">Edit List</button>
+        <span id="listwords_wordcount" style="white-space: nowrap">0 Words in List</span>
         </div>
         <ul id="listwords_list" data-role="listview" data-filter="true">
         </ul>
@@ -95,6 +126,115 @@
 
 	</div><!-- /footer -->
 </div><!-- /page two -->
+
+
+
+
+
+<div data-role="page" id="prefs">
+
+    <div data-role="header" data-position="fixed">
+<h2>Preferences</h2>
+        <a href='#' class='ui-btn-right prefs-done' data-icon='check'>Done</a>
+    </div><!-- /header -->
+
+    <div data-role="content">
+
+        <div class="ui-body ui-body-a">
+
+            <h4>Writing Systems</h4>
+            <div data-role="fieldcontain">
+                <label for="word_ws">Word</label>
+                <input type="text" id="word_ws" value="de" />
+            </div>
+            <div data-role="fieldcontain">
+                <label for="meaning_ws">Meaning</label>
+                <input type="text" id="meaning_ws" value="en" />
+            </div>
+            <div data-role="fieldcontain">
+                <label for="showmeaning">Meaning</label>
+                <select id="showmeaning" data-role="slider">
+                    <option value="hide">Hide</option>
+                    <option value="show" selected>Show</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="ui-body ui-body-a">
+            <h4>Semantic Domains</h4>
+            <div data-role="fieldcontain">
+                <label for="uilanguage">Display in</label>
+                <select id="uilanguage">
+                    <option value="en" selected>English</option>
+                    <option value="id">Indonesian</option>
+                    <option value="es">Spanish</option>
+                    <option value="ru">Russian</option>
+                    <option value="zh-CN">Chinese (Simplified)</option>
+                    <option value="th">Thai</option>
+                    <option value="km">Khmer</option>
+                    <option value="ne">Nepali</option>
+                    <option value="hi">Hindi</option>
+                    <option value="ur">Urdu</option>
+                    <option value="fr">French</option>
+                </select>
+            </div>
+
+            <div data-role="fieldcontain">
+                <fieldset data-role="controlgroup" data-type="horizontal" id="prefs_domainselect">
+                    <legend>Work With These Domains</legend>
+                    <input type="checkbox" id="domain-1" class="custom" checked />
+                    <label for="domain-1">1</label>
+                    <input type="checkbox" id="domain-2" class="custom" />
+                    <label for="domain-2">2</label>
+                    <input type="checkbox" id="domain-3" class="custom" />
+                    <label for="domain-3">3</label>
+                    <input type="checkbox" id="domain-4" class="custom" />
+                    <label for="domain-4">4</label>
+                    <input type="checkbox" id="domain-5" class="custom" />
+                    <label for="domain-5">5</label>
+                    <input type="checkbox" id="domain-6" class="custom" />
+                    <label for="domain-6">6</label>
+                    <input type="checkbox" id="domain-7" class="custom" />
+                    <label for="domain-7">7</label>
+                    <input type="checkbox" id="domain-8" class="custom" />
+                    <label for="domain-8">8</label>
+                    <input type="checkbox" id="domain-9" class="custom" />
+                    <label for="domain-9">9</label>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="ui-body ui-body-a" id="prefs_uploadsettings">
+            <h4>Upload Settings</h4>
+            <div data-role="fieldcontain">
+                <label for="lf_host">Host</label>
+                <input type="text" id="lf_host" value="languageforge.com" disabled />
+            </div>
+
+            <div data-role="fieldcontain">
+                <label for="lf_project">Project Name</label>
+                <input type="text" id="lf_project" value="" />
+            </div>
+
+            <div data-role="fieldcontain">
+                <label for="lf_username">User Name</label>
+                <input type="text" id="lf_username" value="" />
+            </div>
+
+            <div data-role="fieldcontain">
+                <label for="lf_password">Password</label>
+                <input type="password" id="lf_password" value="" />
+            </div>
+
+            <button id="uploadbutton" data-theme="b">Upload Now</button>
+        </div>
+
+
+    </div><!-- /content -->
+    <div data-role="footer">
+        <a href='#' class='ui-btn-right prefs-done' data-icon='check'>Done</a>
+    </div><!-- /footer -->
+</div>
 
 </body>
 </html>

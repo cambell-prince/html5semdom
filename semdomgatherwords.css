@@ -7,6 +7,9 @@ label {
     font-weight: bold;
 }
 
+.writingsystemlabel {
+	font-style: italic;
+}
 
 
 /* TODO: make a custom RED X icon for delete list item.  See
