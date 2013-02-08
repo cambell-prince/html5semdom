@@ -98,6 +98,7 @@ function onItemViewAddWordButtonClick() {
         $("#wordform_semdomselect").val()
     );
     resetAddWordForm();
+    $("#wordform_word").focus();
     //onItemViewSemdomSelectChange();  // update the semdom description
 }
 
