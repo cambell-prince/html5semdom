@@ -1,11 +1,6 @@
-Add settings dialog:
- - turn off meaning field
- - specify languages for word and meaning
- - specify language for semantic domain data
-- specify which domains to load (1.x, 2.x, etc) (to increase performance)
 
-Add send to LF dialog:
- - server
- - project name
- - user name
- - password
+to fix:
+
+- add summary box animation
+
+- make deleting a word more clear (swipe action?)

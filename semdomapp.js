@@ -1,8 +1,7 @@
-// temporary javascript array representing words in local storage
+// in memory globals
 var words = {};
 var lastdbid = 0;
 var semdomdata = {};
-var uilanguage = "en";
 var version = "1.0";
 var appName = "semdomgatherwords";
 /* local storage namespace */
@@ -11,72 +10,74 @@ var localStorageItemIndex = {};
 var firstPageView_AddWords = true;
 var loadingSemdomXml = false;
 
+// application preferences (persistent in local storage)
+var prefs = {
+    lfhost: "www.languageforge.com",
+    lfprojectname: "",
+    lfusername: "",
+    lfpassword: "",
+
+    showmeaning: true,
+    word_ws: "de",
+    meaning_ws: "en",
+    uilanguage: "en",
+    showdomains: {
+        "1": true,
+        "2": false,
+        "3": false,
+        "4": false,
+        "5": false,
+        "6": false,
+        "7": false,
+        "8": false,
+        "9": false
+    }
+};
+
 /* mode: "list", "gather", "edit", "listdeleteitem"
 *  itemid: the itemid of the object in the datastore to edit.  For list and add view, this is undefined */
 var state = {mode: "list", itemid: undefined};
+
+// global error handler
+window.onerror = onJavascriptError;
 
 
 $(document).ready(function(){
 
     // Modernizr checks
     if (! Modernizr.localstorage) {
-        alert("Local Storage is not supported!  All changes will be lost when browser or app is closed")
+        alert("Local Storage is not supported!  All changes will be lost when browser or app is closed");
     }
     else {
         initializeLocalStorage();
     }
+    
+    // register event handlers
+    $("#wordform_addbutton").click(onItemViewAddWordButtonClick);
+    $("#wordform_donebutton").click(onItemViewDoneButtonClick);
+    $("#wordform_semdomselect").change(onItemViewSemdomSelectChange);
+    $("#wordform_slider").change(onItemViewSliderChange);
+    $("#wordform_word").keyup(onAddEditWordKeyPress);
+    $("#wordform_meaning").keyup(onAddEditWordKeyPress);
 
+    $("#listwords_gatherbutton").click(onListViewGatherWordsButtonClick);
+    $("#listwords_editbutton").click(onListViewEditButtonClick);
+    $("#listwords_prefsbutton").click(onListViewPrefsButtonClick);
+    $("#listwords_semdomselect").change(onListViewSemdomSelectChange);
+    $("#listwords_list").on("click", "a", onListViewItemClick);
 
+    $("#prefs").on("click", "a.prefs-done", onPrefsViewDoneButtonClicked);
+    $("#uploadbutton").click(onPrefsViewUploadButtonClicked);
 
-    //loadSampleItems();
-
-    // TODO: move to worker thread so the UI is more responsive
     loadingSemdomXml = true;
     $.getJSON("resources/ddp4.json", function(data) {
         semdomdata = data;
         loadSelectWithSemdomData($("#listwords_semdomselect"), true);
         loadSelectWithSemdomData($("#wordform_semdomselect"));
-        // Note: using the data-native-menu=false makes a nice MobileUI menu, but it may also be too slow (performance hog)
-        $("#listwords_semdomselect").selectmenu('refresh');
+        $("#listwords_semdomselect").selectmenu().selectmenu('refresh');
         loadingSemdomXml = false;
+	    updateView();
     });
-
-    /*
-    loadSemdomDataFromXml(function() {
-        writeToJSON();
-        loadSelectWithSemdomData($("#listwords_semdomselect"), true);
-        loadSelectWithSemdomData($("#wordform_semdomselect"));
-        // Note: using the data-native-menu=false makes a nice MobileUI menu, but it may also be too slow (performance hog)
-        $("#listwords_semdomselect").selectmenu('refresh');
-        loadingSemdomXml = false;
-        //$("#wordform_semdomselect").selectmenu('refresh');
-
-        // $("#wordform_semdomselect").selectmenu('refresh', true);  // i could not figure out how to get this to run here without getting a javascript error:
-         //Uncaught Error: cannot call methods on selectmenu prior to initialization; attempted to call method 'refresh'
-
-        //$.mobile.loading('hide');  // hide the loader
-    });
-    */
-
-    // register event handlers
-    $("#listwords_gatherbutton").click(onListViewGatherWordsButtonClick);
-    $("#wordform_addbutton").click(onItemViewAddWordButtonClick);
-    $("#wordform_donebutton").click(onItemViewDoneButtonClick);
-    $("#listwords_editbutton").click(onListViewEditButtonClick);
-    $("#listwords_semdomselect").change(onListViewSemdomSelectChange);
-    $("#wordform_semdomselect").change(onItemViewSemdomSelectChange);
-    //$("#wordform_slider").change(onItemViewSliderChange());
-    $("#wordform_slider").change(function() {
-        if (!loadingSemdomXml) {
-            var sid = $("#wordform_semdomselect").val();
-            var qid = $("#wordform_slider").val();
-            $("#wordform_description").text(getSemdomDescription(sid, qid));
-        }
-    });
-
-    $("#listwords_list").on("click", "a", onListViewItemClick);
-
-    updateView();
 });
 
 
@@ -97,7 +98,7 @@ function onItemViewAddWordButtonClick() {
         $("#wordform_semdomselect").val()
     );
     resetAddWordForm();
-    onItemViewSemdomSelectChange();  // update the semdom description
+    //onItemViewSemdomSelectChange();  // update the semdom description
 }
 
 function onItemViewDoneButtonClick() {
@@ -204,6 +205,62 @@ function onItemViewSliderChange() {
     }
 }
 
+function onListViewPrefsButtonClick() {
+    state.mode = "prefs";
+    updateView();
+}
+
+function onPrefsViewDoneButtonClicked() {
+	prefs.word_ws = $("#word_ws").val().toString();
+	prefs.meaning_ws = $("#meaning_ws").val().toString();
+	prefs.showmeaning = $("#showmeaning").val() == "show";
+	
+	prefs.uilanguage = $("#uilanguage").val();
+	
+	prefs.lfhost = $("#lf_host").val();
+	prefs.lfprojectname = $("#lf_project").val();
+	prefs.lfusername = $("#lf_username").val();
+	prefs.jfpassword = $("#lf_password").val();
+	
+	$("#prefs_domainselect input").each(function() {
+		var id = $(this).attr('id').substring(7);
+		if (this.checked) {
+			prefs.showdomains[id] = true;
+		}
+		else {
+			prefs.showdomains[id] = false;
+		}
+	});
+	
+	updatePrefsInStorage();
+	
+	loadSelectWithSemdomData($("#listwords_semdomselect"), true);
+    loadSelectWithSemdomData($("#wordform_semdomselect"));
+        
+	state.mode = "list";
+	updateView();
+}
+
+function onPrefsViewUploadButtonClicked() {
+	$.mobile.changePage('#lfupload', {transition: 'pop', role: 'dialog'});   
+	
+}
+
+
+function onJavascriptError(msg, url, line) {
+	$.mobile.changePage('#jserror', {transition: 'pop', role: 'dialog'});   
+	$("#jserror_msg").text(msg);
+	$("#jserror_url").text(url);
+	$("#jserror_line").text("<b>Line:</b> " + line);
+	$("#jserror_emaildev").prop('href',"mailto: semdomapp@palaso.org?subject=" + encodeURIComponent("Gather Words Javascript Error") + 
+		"&body=" + encodeURIComponent("Line " + line + " of " + url + "\n\n" + msg));
+}
+
+function onAddEditWordKeyPress(e) {
+	if ((e.keyCode || e.which) == 13) { // Enter Key
+		onItemViewAddWordButtonClick();
+	}
+}
 
 
 
@@ -222,12 +279,16 @@ function updateView() {
         doAddEditView();
     }
     else if (state.mode === "edit") {
-        doAddEditView(state.itemid)
+        doAddEditView(state.itemid);
+    }
+    else if (state.mode == "prefs") {
+        doPrefsView();
     }
 }
 
 function doListView() {
     $.mobile.changePage($("#listwords"));
+	$("#listwords_semdomselect").selectmenu('refresh');
 
     // load words into table
     var items = getWordsFromStorage($("#listwords_semdomselect").val());
@@ -236,22 +297,31 @@ function doListView() {
     var numOfItems = 0;
     for (x in items) {
         numOfItems++;
-        var html = "<li><a data-itemid='" + items[x].id + "' href='#'><h3>" + items[x].word +
-            "</h3><p><strong>" + items[x].meaning + "</strong></p>" +
-            "<p class='ui-li-aside'>" + items[x].semdomid + "</p>" + "</a></li>";
+        var html = "<li><a data-itemid='" + items[x].id + "' href='#'><h3>" + items[x].word + "</h3>";
+        if (prefs.showmeaning) {
+            html += "<p><strong>" + items[x].meaning + "</strong></p>";
+        }
+        html += "<p class='ui-li-aside'>" + getSemdomFullName(items[x].semdomid) + "</p>" + "</a></li>";
         $("#listwords_list").append(html);
     }
     //$("#listwords_list li a").preventDefault(); // prevent href in anchors from working
+    $("#listwords_list li").tsort(); // tiny sort
     $("#listwords_list").listview("refresh");
 
     updateWordCount(numOfItems);
 }
 
 function doAddEditView(id) {
-    $.mobile.changePage($("#addeditword"));
     var addWordButton = $("#wordform_addbutton").closest('.ui-btn');
     $("#wordform_slider_container .ui-slider-input").css("display", "none"); // hide the number on the slider
+    
+    // update the writing system labels
+    $("#wordform_wordcontainer .writingsystemlabel").text("[" + prefs.word_ws + "]");
+    $("#wordform_meaningcontainer .writingsystemlabel").text("[" + prefs.meaning_ws + "]");
+    
     if (state.mode === "edit") {
+        $.mobile.changePage($("#addeditword"), {transition: "slidefade"});
+
         // we are editing an existing word
         // load word into model
         var item = getWordFromStorage(id);
@@ -265,6 +335,8 @@ function doAddEditView(id) {
         $("#wordform_slider_container").hide();
     }
     else {
+        $.mobile.changePage($("#addeditword"), {transition: "flip"});
+		$("#wordform_semdomselect").selectmenu('refresh');
         $("#wordform_slider_container").show();
         addWordButton.show();
         $("#wordform_semdomselect").parent().show();
@@ -278,6 +350,44 @@ function doAddEditView(id) {
         firstPageView_AddWords = false;
         $("#wordform_semdomselect").selectmenu('refresh', true);
     }
+
+    if (prefs.showmeaning) {
+        $("#wordform_meaningcontainer").show();
+    }
+    else {
+        $("#wordform_meaningcontainer").hide();
+    }
+}
+
+function doPrefsView() {
+    $.mobile.changePage($("#prefs"), {transition: "slideup"});
+
+    $("#lf_host").val(prefs.lfhost);
+    $("#lf_project").val(prefs.lfprojectname);
+    $("#lf_username").val(prefs.lfusername);
+    $("#lf_password").val(prefs.lfpassword);
+
+    $("#word_ws").val(prefs.word_ws);
+    $("#meaning_ws").val(prefs.meaning_ws);
+
+    if (prefs.showmeaning) {
+        $("#showmeaning").val("show").slider('refresh');
+    }
+    else {
+        $("#showmeaning").val("hide").slider('refresh');
+    }
+    
+    $("#uilanguage").val(prefs.uilanguage).selectmenu('refresh');
+    
+    for (d in prefs.showdomains) {
+    	var key = "#domain-" + d;
+    	if (prefs.showdomains[d]) {
+    		$(key).prop('checked', true).checkboxradio('refresh');
+    	}
+    	else {
+    		$(key).prop('checked', false).checkboxradio('refresh');
+    	}
+    }   
 }
 
 
@@ -290,14 +400,6 @@ function doAddEditView(id) {
 
 // helper functions
 
-/*
-function loadSampleItems() {
-    addWordToStorage("der Apfel", "apple", "1 Universe, creation");
-    addWordToStorage("der Stern", "star", "1 Universe, creation");
-    addWordToStorage("die Geschaft", "creation", "1 Universe, creation");
-}
-*/
-
 function addWordToSummaryBox(word) {
     //TODO: make a summary box
     //alert("'" + word + "' added to the summary box!");
@@ -307,7 +409,6 @@ function resetAddWordForm() {
     $("#wordform_itemid").val("");
     $("#wordform_word").val("");
     $("#wordform_meaning").val("");
-    $("#wordform_semdomselect").val("");
 }
 
 function updateWordCount(numOfItems) {
@@ -343,7 +444,7 @@ function changeListViewElementTheme(selector, theme) {
                 gggpar.listview("refresh");
             }catch(exignore){
                 //silent catch because this will fail for non initialized lists
-                //but thats ok
+                //but thats OK
             }
         });
     }
@@ -380,7 +481,12 @@ function getSemdomNumOfDescriptions(id) {
 }
 
 function getSemdomFullName(id) {
-    return semdomdata[id].abbreviation + ' ' + semdomdata[id]["name"][uilanguage];
+	try {
+	    return semdomdata[id].abbreviation + ' ' + semdomdata[id]["name"][prefs.uilanguage];
+	}
+	catch (err) {
+		return "undefined id=" + id;
+	}
 }
 
 /*
@@ -427,28 +533,31 @@ function loadSelectWithSemdomData(selectobj, hasAll) {
     }
     var firstTime = true;
     for (var id in semdomdata) {
-        if (semdomdata[id].abbreviation.split('.').length - 1 == 1) { // only make major revisions
-            if (!firstTime) {
-                html += "</optgroup>";
-                firstTime = false;
-            }
-            var label = semdomdata[id].abbreviation + ' ' + semdomdata[id].name[uilanguage];
-            html += "<optgroup label='" + label + "'>"
-        }
-        html += "<option value='" + id + "'>" + getSemdomFullName(id) + "</option>";
+    	var majorNum = id.substring(0,1);
+    	if (prefs.showdomains[majorNum]) { // only show domains that have been chosen to show
+    		
+	        if (semdomdata[id].abbreviation.split('.').length - 1 == 1) { // only make major revisions
+	            if (!firstTime) {
+	                html += "</optgroup>";
+	                firstTime = false;
+	            }
+	            var label = semdomdata[id].abbreviation + ' ' + semdomdata[id].name[prefs.uilanguage];
+	            html += "<optgroup label='" + label + "'>";
+	        }
+	        html += "<option value='" + id + "'>" + getSemdomFullName(id) + "</option>";
+    	}
     }
     html += "</optgroup>";
     selectobj.html(html);
 }
 
 
+/*
 function writeToJSON() {
     $("#output").text(JSON.stringify(semdomdata));
 }
+*/
 
-function loadSemdomFromJSON(successCallback) {
-
-}
 
 
 
@@ -503,18 +612,29 @@ function postWordToLF(item) {
 // storage functions
 function initializeLocalStorage() {
     if (Modernizr.localstorage) {
+    	
+    	// initialize lastdbid
         if (lsexists("lastdbid")) {
             lastdbid = parseInt(lsread("lastdbid"));
         } else {
             lastdbid = 0;
         }
+        
+        // initialize itemindex
         if (lsexists("itemindex")) {
             localStorageItemIndex = JSON.parse(lsread("itemindex"));
         } else {
             localStorageItemIndex = {};
         }
+        
+        // initialize words
         for (itemid in localStorageItemIndex) {
             words[itemid] = localStorageItemIndex[itemid].item;
+        }
+        
+        // initialize prefs
+        if (lsexists("prefs")) {
+        	prefs = JSON.parse(lsread("prefs"));
         }
     }
 }
@@ -648,4 +768,8 @@ function getWordCount() {
         count++;
     }
     return count;
+}
+
+function updatePrefsInStorage() {
+	lswrite("prefs", JSON.stringify(prefs));
 }
