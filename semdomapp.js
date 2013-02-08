@@ -53,21 +53,21 @@ $(document).ready(function(){
     }
     
     // register event handlers
-    $("#wordform_addbutton").click(onItemViewAddWordButtonClick);
-    $("#wordform_donebutton").click(onItemViewDoneButtonClick);
+    $("#wordform_addbutton").bind('vclick', onItemViewAddWordButtonClick);
+    $("#wordform_donebutton").bind('vclick', onItemViewDoneButtonClick);
     $("#wordform_semdomselect").change(onItemViewSemdomSelectChange);
     $("#wordform_slider").change(onItemViewSliderChange);
     $("#wordform_word").keyup(onAddEditWordKeyPress);
     $("#wordform_meaning").keyup(onAddEditWordKeyPress);
 
-    $("#listwords_gatherbutton").click(onListViewGatherWordsButtonClick);
-    $("#listwords_editbutton").click(onListViewEditButtonClick);
-    $("#listwords_prefsbutton").click(onListViewPrefsButtonClick);
+    $("#listwords_gatherbutton").bind('vclick', onListViewGatherWordsButtonClick);
+    $("#listwords_editbutton").bind('vclick', onListViewEditButtonClick);
+    $("#listwords_prefsbutton").bind('vclick', onListViewPrefsButtonClick);
     $("#listwords_semdomselect").change(onListViewSemdomSelectChange);
-    $("#listwords_list").on("click", "a", onListViewItemClick);
+    $("#listwords_list").on("vclick", "a", onListViewItemClick);
 
-    $("#prefs").on("click", "a.prefs-done", onPrefsViewDoneButtonClicked);
-    $("#uploadbutton").click(onPrefsViewUploadButtonClicked);
+    $("#prefs").on("vclick", "a.prefs-done", onPrefsViewDoneButtonClicked);
+    $("#uploadbutton").bind('vclick', onPrefsViewUploadButtonClicked);
 
     loadingSemdomXml = true;
     $.getJSON("resources/ddp4.json", function(data) {
